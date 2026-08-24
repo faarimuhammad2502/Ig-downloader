@@ -179,6 +179,31 @@
   button:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* Banner Informasi Akun Private */
+  .info-box {
+    background: #fff8ec;
+    border: 1px solid #fce4b8;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.83rem;
+    color: #8a5300;
+    line-height: 1.5;
+  }
+  .info-box svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: #d97706;
+    margin-top: 1px;
+  }
+  .info-box strong {
+    color: #6b3f00;
+  }
+
   #status {
     margin-top: 14px;
     padding: 0 8px;
@@ -307,6 +332,18 @@
         <button type="submit" id="submitBtn">Unduh</button>
       </form>
     </div>
+
+    <!-- Banner Informasi Akun Private -->
+    <div class="info-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <div>
+        <strong>Catatan Akun Private:</strong> Media dari akun Instagram yang di-private tidak dapat diunduh. Pastikan postingan, Reels, atau Story berasal dari <strong>akun publik</strong>.
+      </div>
+    </div>
+
     <div id="status"></div>
     <div id="result"></div>
   </main>
@@ -349,9 +386,6 @@
       urlInput.focus();
       statusEl.textContent = "";
     } catch (err) {
-      // Browser (terutama saat file dibuka via file:// atau tanpa izin clipboard)
-      // tidak mengizinkan baca clipboard otomatis. Fokuskan input supaya
-      // user tinggal tempel manual (tekan lama → Tempel di HP, atau Ctrl+V).
       urlInput.focus();
       urlInput.select();
       statusEl.textContent = "Tap kolom link lalu tempel manual (tekan lama → Tempel).";
@@ -386,6 +420,12 @@
       const data = await res.json();
       console.log("Response API:", data);
 
+      // Cek jika API mengembalikan pesan error terkait akun private
+      if (data.message && data.message.toLowerCase().includes("private")) {
+        statusEl.innerHTML = "<span style='color: #d97706;'>🔒 Gagal mengambil media. Postingan ini berasal dari <strong>akun private</strong>. Silakan gunakan link dari akun publik.</span>";
+        return;
+      }
+
       let mediaItems = [];
 
       if (Array.isArray(data.media)) {
@@ -399,7 +439,7 @@
       }
 
       if (mediaItems.length === 0) {
-        statusEl.textContent = "Nggak nemu media. Cek struktur respons di console (F12).";
+        statusEl.innerHTML = "<span style='color: #d97706;'>⚠️ Media tidak ditemukan. Pastikan link valid dan akun <strong>tidak di-private</strong>.</span>";
       } else {
         statusEl.textContent = `Ditemukan ${mediaItems.length} media.`;
         renderMedia(mediaItems);
@@ -426,7 +466,6 @@
       tempLink.remove();
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      // Kalau kena CORS, browser tetap coba download langsung lewat href asli
       window.open(mediaUrl, "_blank");
     }
   }
@@ -472,7 +511,7 @@
       const isImage = type.includes("image") || mediaUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i);
       const ext = isImage ? "jpg" : "mp4";
       const filename = `instagram-${Date.now()}-${index + 1}.${ext}`;
-      item._filename = filename; // simpan buat dipakai tombol "Unduh Semua"
+      item._filename = filename;
 
       const link = document.createElement("a");
       link.href = mediaUrl;
@@ -490,7 +529,6 @@
       resultEl.appendChild(wrapper);
     });
 
-    // Tombol unduh semua, muncul paling bawah setelah semua media dirender
     if (items.length > 1) {
       const allBtn = document.createElement("button");
       allBtn.type = "button";
@@ -504,7 +542,7 @@
           if (!mUrl) continue;
           allBtn.textContent = `Mengunduh ${i + 1}/${items.length}...`;
           await downloadFile(mUrl, it._filename || `instagram-${Date.now()}-${i + 1}`);
-          await new Promise((r) => setTimeout(r, 400)); // jeda kecil biar browser gak nge-block unduhan beruntun
+          await new Promise((r) => setTimeout(r, 400));
         }
         allBtn.textContent = `Unduh Semua (${items.length})`;
         allBtn.disabled = false;
