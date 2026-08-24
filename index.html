@@ -15,9 +15,9 @@
     --ink: #1f1b2e;
     --muted: #7a7488;
     --line: #ecebf3;
-    --p1: #7b3fe4;  /* purple */
-    --p2: #d6339f;  /* pink */
-    --p3: #f5804f;  /* orange */
+    --p1: #7b3fe4;
+    --p2: #d6339f;
+    --p3: #f5804f;
     --grad: linear-gradient(135deg, var(--p1), var(--p2) 55%, var(--p3));
   }
   * { box-sizing: border-box; }
@@ -185,6 +185,7 @@
     font-size: 0.85rem;
     color: var(--muted);
     min-height: 16px;
+    text-align: center;
   }
 
   .alert-box {
@@ -199,6 +200,7 @@
     font-size: 0.85rem;
     color: #991b1b;
     line-height: 1.5;
+    text-align: left;
   }
   .alert-box svg {
     width: 20px;
@@ -211,19 +213,23 @@
     color: #7f1d1d;
   }
 
+  /* Grid & Card Hasil yang Lebih Ringkas (Web Standard) */
   #result {
     margin-top: 24px;
     display: none;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 280px));
+    justify-content: center;
+    gap: 20px;
   }
   .media-item {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 16px;
-    padding: 10px;
+    padding: 12px;
     box-shadow: 0 8px 22px rgba(31,27,46,0.05);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
   }
   .media-item:hover {
     transform: translateY(-3px);
@@ -231,24 +237,31 @@
   }
   .media-frame {
     background: #efedf5;
-    border-radius: 11px;
+    border-radius: 12px;
     overflow: hidden;
-    aspect-ratio: 4 / 5;
+    max-height: 320px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
   }
-  .media-item img, .media-item video {
+  .media-item img {
     width: 100%;
     height: 100%;
+    max-height: 320px;
     object-fit: cover;
+  }
+  .media-item video {
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    background: #000;
   }
   .caption-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 10px 3px 12px;
+    margin: 10px 2px 12px;
   }
   .caption {
     font-size: 0.72rem;
@@ -257,17 +270,19 @@
     background: #f3f1f9;
     padding: 3px 9px;
     border-radius: 999px;
+    text-transform: uppercase;
   }
   .media-item a {
     display: block;
     text-align: center;
-    padding: 10px;
+    padding: 11px;
     border-radius: 10px;
     background: var(--ink);
     color: white;
     text-decoration: none;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-top: auto;
   }
   .media-item a:hover { opacity: 0.88; }
 
@@ -284,7 +299,9 @@
     font-weight: 700;
     font-size: 0.9rem;
     cursor: pointer;
-    margin-top: 4px;
+    margin: 8px auto 0;
+    max-width: 280px;
+    width: 100%;
   }
   .download-all-btn:hover { opacity: 0.9; }
   .download-all-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -293,6 +310,7 @@
     form { flex-direction: column; }
     button { width: 100%; }
     .paste-btn { width: 100%; justify-content: center; }
+    #result { grid-template-columns: 100%; }
   }
 </style>
 </head>
@@ -350,7 +368,6 @@
   const clearBtn = document.getElementById("clearBtn");
   const pasteBtn = document.getElementById("pasteBtn");
 
-  // Helper fungsi untuk bypass blokir CORS Instagram pada gambar
   function getProxiedImageUrl(rawUrl) {
     if (!rawUrl) return "";
     return `https://images.weserv.nl/?url=${encodeURIComponent(rawUrl)}`;
@@ -523,7 +540,7 @@
       capRow.className = "caption-row";
       const caption = document.createElement("span");
       caption.className = "caption";
-      caption.textContent = `${quality || "HD"} · ${isImage ? "image" : "video"}`;
+      caption.textContent = `${quality || "HD"} · ${isImage ? "IMAGE" : "VIDEO"}`;
       capRow.appendChild(caption);
       wrapper.appendChild(capRow);
 
@@ -535,12 +552,12 @@
       link.href = mediaUrl;
       link.download = filename;
       link.rel = "noopener noreferrer";
-      link.textContent = "Unduh";
+      link.textContent = "Unduh Media";
       link.addEventListener("click", async (e) => {
         e.preventDefault();
         link.textContent = "Mengunduh...";
         await downloadFile(mediaUrl, filename);
-        link.textContent = "Unduh";
+        link.textContent = "Unduh Media";
       });
       wrapper.appendChild(link);
 
