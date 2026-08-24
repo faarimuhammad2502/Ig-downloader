@@ -350,6 +350,12 @@
   const clearBtn = document.getElementById("clearBtn");
   const pasteBtn = document.getElementById("pasteBtn");
 
+  // Helper fungsi untuk bypass blokir CORS Instagram pada gambar
+  function getProxiedImageUrl(rawUrl) {
+    if (!rawUrl) return "";
+    return `https://images.weserv.nl/?url=${encodeURIComponent(rawUrl)}`;
+  }
+
   function toggleClearBtn() {
     clearBtn.classList.toggle("show", urlInput.value.length > 0);
   }
@@ -431,7 +437,7 @@
             </svg>
             <div>
               <strong>Gagal Mengunduh Media!</strong><br>
-              Media tidak dapat diakses. Ini terjadi jika postingan, Reels, atau Story berasal dari <strong>akun private</strong>, atau link yang dimasukkan tidak valid. Pastikan link berasal dari akun publik.
+              Media tidak dapat diakses. Ini terjadi jika postingan, Reels, atau Story berasal dari <strong>akun private</strong>, atau link tidak valid. Pastikan link berasal dari akun publik.
             </div>
           </div>
         `;
@@ -483,7 +489,7 @@
 
     items.forEach((item, index) => {
       const mediaUrl = item.url || item.download_url || item.link;
-      const thumbUrl = item.thumbnail || item.thumb || item.picture || item.cover || mediaUrl;
+      const rawThumb = item.thumbnail || item.thumb || item.picture || item.cover || (item.type === "image" ? mediaUrl : "");
       const quality = item.quality;
       const type = (item.type || "").toLowerCase();
       if (!mediaUrl) return;
@@ -496,31 +502,21 @@
 
       const isImage = type.includes("image") || mediaUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i);
       
-      let preview;
       if (isImage) {
-        preview = document.createElement("img");
-        preview.src = thumbUrl;
-        preview.referrerPolicy = "no-referrer";
-        preview.alt = "Preview Instagram Photo";
-        // Fallback jika thumbnail gagal dimuat karena CORS CDN Instagram
-        preview.onerror = () => {
-          if (preview.src !== mediaUrl) {
-            preview.src = mediaUrl;
-          } else {
-            preview.onerror = null;
-            preview.style.display = "none";
-            frame.innerHTML = `<div style="padding:15px; text-align:center; color:#7a7488; font-size:0.8rem;">🖼️ Preview Foto<br>(Siap diunduh)</div>`;
-          }
-        };
+        const preview = document.createElement("img");
+        preview.src = getProxiedImageUrl(rawThumb || mediaUrl);
+        preview.alt = "Preview Photo";
+        frame.appendChild(preview);
       } else {
-        preview = document.createElement("video");
-        preview.src = mediaUrl;
-        if (thumbUrl && thumbUrl !== mediaUrl) preview.poster = thumbUrl;
-        preview.controls = true;
-        preview.referrerPolicy = "no-referrer";
+        const video = document.createElement("video");
+        video.src = mediaUrl;
+        if (rawThumb) {
+          video.poster = getProxiedImageUrl(rawThumb);
+        }
+        video.controls = true;
+        frame.appendChild(video);
       }
 
-      frame.appendChild(preview);
       wrapper.appendChild(frame);
 
       const capRow = document.createElement("div");
