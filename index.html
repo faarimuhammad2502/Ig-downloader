@@ -179,37 +179,37 @@
   button:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* Banner Informasi Akun Private */
-  .info-box {
-    background: #fff8ec;
-    border: 1px solid #fce4b8;
-    border-radius: 14px;
-    padding: 14px 16px;
-    margin-top: 18px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    font-size: 0.83rem;
-    color: #8a5300;
-    line-height: 1.5;
-  }
-  .info-box svg {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    color: #d97706;
-    margin-top: 1px;
-  }
-  .info-box strong {
-    color: #6b3f00;
-  }
-
   #status {
     margin-top: 14px;
     padding: 0 8px;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: var(--muted);
     min-height: 16px;
+  }
+
+  /* Style Banner Peringatan ketika Gagal / Akun Private */
+  .alert-box {
+    background: #fff4f4;
+    border: 1px solid #fecaca;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: #991b1b;
+    line-height: 1.5;
+  }
+  .alert-box svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: #dc2626;
+    margin-top: 1px;
+  }
+  .alert-box strong {
+    color: #7f1d1d;
   }
 
   #result {
@@ -333,17 +333,6 @@
       </form>
     </div>
 
-    <!-- Banner Informasi Akun Private -->
-    <div class="info-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-      </svg>
-      <div>
-        <strong>Catatan Akun Private:</strong> Media dari akun Instagram yang di-private tidak dapat diunduh. Pastikan postingan, Reels, atau Story berasal dari <strong>akun publik</strong>.
-      </div>
-    </div>
-
     <div id="status"></div>
     <div id="result"></div>
   </main>
@@ -369,7 +358,7 @@
     urlInput.value = "";
     toggleClearBtn();
     urlInput.focus();
-    statusEl.textContent = "";
+    statusEl.innerHTML = "";
     resultEl.style.display = "none";
     resultEl.innerHTML = "";
   });
@@ -384,7 +373,7 @@
       urlInput.value = text.trim();
       toggleClearBtn();
       urlInput.focus();
-      statusEl.textContent = "";
+      statusEl.innerHTML = "";
     } catch (err) {
       urlInput.focus();
       urlInput.select();
@@ -420,14 +409,7 @@
       const data = await res.json();
       console.log("Response API:", data);
 
-      // Cek jika API mengembalikan pesan error terkait akun private
-      if (data.message && data.message.toLowerCase().includes("private")) {
-        statusEl.innerHTML = "<span style='color: #d97706;'>🔒 Gagal mengambil media. Postingan ini berasal dari <strong>akun private</strong>. Silakan gunakan link dari akun publik.</span>";
-        return;
-      }
-
       let mediaItems = [];
-
       if (Array.isArray(data.media)) {
         mediaItems = data.media;
       } else if (Array.isArray(data.result)) {
@@ -438,8 +420,22 @@
         mediaItems = [{ url: data.url, type: "video" }];
       }
 
-      if (mediaItems.length === 0) {
-        statusEl.innerHTML = "<span style='color: #d97706;'>⚠️ Media tidak ditemukan. Pastikan link valid dan akun <strong>tidak di-private</strong>.</span>";
+      // Deteksi Kegagalan / Akun Private
+      const isPrivateError = data.message && data.message.toLowerCase().includes("private");
+      
+      if (isPrivateError || mediaItems.length === 0) {
+        statusEl.innerHTML = `
+          <div class="alert-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <div>
+              <strong>Gagal Mengunduh Media!</strong><br>
+              Media tidak dapat diakses. Ini biasanya terjadi jika postingan, Reels, atau Story berasal dari <strong>akun private</strong>, atau link yang dimasukkan tidak valid. Pastikan link berasal dari akun publik.
+            </div>
+          </div>
+        `;
       } else {
         statusEl.textContent = `Ditemukan ${mediaItems.length} media.`;
         renderMedia(mediaItems);
@@ -447,7 +443,19 @@
 
     } catch (err) {
       console.error(err);
-      statusEl.textContent = "Terjadi error: " + err.message;
+      statusEl.innerHTML = `
+        <div class="alert-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>Terjadi Kesalahan!</strong><br>
+            Tidak dapat memproses link (${err.message}). Pastikan link yang ditempel sudah benar.
+          </div>
+        </div>
+      `;
     } finally {
       submitBtn.disabled = false;
     }
