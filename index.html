@@ -182,33 +182,34 @@
   #status {
     margin-top: 14px;
     padding: 0 8px;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: var(--muted);
     min-height: 16px;
   }
-  #status.warning {
-    background: #fff4ec;
-    border: 1px solid #ffdcc2;
-    color: #c05a1f;
-    padding: 10px 14px;
-    border-radius: 10px;
-    line-height: 1.5;
-  }
-  .notice-box {
+
+  .alert-box {
+    background: #fff4f4;
+    border: 1px solid #fecaca;
+    border-radius: 14px;
+    padding: 14px 16px;
     margin-top: 14px;
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    background: #fff4e9;
-    border: 1px solid #ffe1c2;
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 0.83rem;
-    color: #9a5b1f;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: #991b1b;
     line-height: 1.5;
-    text-align: left;
   }
-  .notice-box .icon { font-size: 1.05rem; line-height: 1; }
+  .alert-box svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: #dc2626;
+    margin-top: 1px;
+  }
+  .alert-box strong {
+    color: #7f1d1d;
+  }
 
   #result {
     margin-top: 24px;
@@ -236,6 +237,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
   }
   .media-item img, .media-item video {
     width: 100%;
@@ -330,6 +332,7 @@
         <button type="submit" id="submitBtn">Unduh</button>
       </form>
     </div>
+
     <div id="status"></div>
     <div id="result"></div>
   </main>
@@ -355,7 +358,7 @@
     urlInput.value = "";
     toggleClearBtn();
     urlInput.focus();
-    statusEl.textContent = "";
+    statusEl.innerHTML = "";
     resultEl.style.display = "none";
     resultEl.innerHTML = "";
   });
@@ -370,11 +373,8 @@
       urlInput.value = text.trim();
       toggleClearBtn();
       urlInput.focus();
-      statusEl.textContent = "";
+      statusEl.innerHTML = "";
     } catch (err) {
-      // Browser (terutama saat file dibuka via file:// atau tanpa izin clipboard)
-      // tidak mengizinkan baca clipboard otomatis. Fokuskan input supaya
-      // user tinggal tempel manual (tekan lama → Tempel di HP, atau Ctrl+V).
       urlInput.focus();
       urlInput.select();
       statusEl.textContent = "Tap kolom link lalu tempel manual (tekan lama → Tempel).";
@@ -388,7 +388,6 @@
 
     resultEl.style.display = "none";
     resultEl.innerHTML = "";
-    statusEl.classList.remove("warning");
     statusEl.textContent = "Memproses link...";
     submitBtn.disabled = true;
 
@@ -411,36 +410,31 @@
       console.log("Response API:", data);
 
       let mediaItems = [];
-
       if (Array.isArray(data.media)) {
         mediaItems = data.media;
       } else if (Array.isArray(data.result)) {
         mediaItems = data.result;
       } else if (data.download_url) {
-        mediaItems = [{ url: data.download_url, type: data.type || "video" }];
+        mediaItems = [{ url: data.download_url, thumbnail: data.thumbnail || data.thumb, type: data.type || "video" }];
       } else if (data.url) {
-        mediaItems = [{ url: data.url, type: "video" }];
+        mediaItems = [{ url: data.url, thumbnail: data.thumbnail || data.thumb, type: "video" }];
       }
 
-      if (mediaItems.length === 0) {
-        const apiMessage = (data.error || data.message || data.msg || data.detail || "").toString();
-        const lower = apiMessage.toLowerCase();
-
-        if (
-          lower.includes("not available") ||
-          lower.includes("private") ||
-          lower.includes("unauthorized") ||
-          lower.includes("not found") ||
-          lower.includes("expired")
-        ) {
-          statusEl.classList.add("warning");
-          statusEl.innerHTML =
-            "⚠️ Media ini nggak bisa diambil. Kemungkinan akunnya <b>private</b>, story-nya <b>sudah lewat 24 jam</b>, atau kontennya memang sudah dihapus/tidak publik. Coba link lain dari akun publik ya.";
-        } else if (apiMessage) {
-          statusEl.textContent = `API bilang: ${apiMessage}`;
-        } else {
-          statusEl.textContent = "Nggak nemu media. Cek struktur respons di console (F12).";
-        }
+      const isPrivateError = data.message && data.message.toLowerCase().includes("private");
+      
+      if (isPrivateError || mediaItems.length === 0) {
+        statusEl.innerHTML = `
+          <div class="alert-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <div>
+              <strong>Gagal Mengunduh Media!</strong><br>
+              Media tidak dapat diakses. Ini terjadi jika postingan, Reels, atau Story berasal dari <strong>akun private</strong>, atau link yang dimasukkan tidak valid. Pastikan link berasal dari akun publik.
+            </div>
+          </div>
+        `;
       } else {
         statusEl.textContent = `Ditemukan ${mediaItems.length} media.`;
         renderMedia(mediaItems);
@@ -448,8 +442,19 @@
 
     } catch (err) {
       console.error(err);
-      statusEl.classList.add("warning");
-      statusEl.textContent = "Terjadi error: " + err.message;
+      statusEl.innerHTML = `
+        <div class="alert-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>Terjadi Kesalahan!</strong><br>
+            Tidak dapat memproses link (${err.message}). Pastikan link yang ditempel sudah benar.
+          </div>
+        </div>
+      `;
     } finally {
       submitBtn.disabled = false;
     }
@@ -468,7 +473,6 @@
       tempLink.remove();
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      // Kalau kena CORS, browser tetap coba download langsung lewat href asli
       window.open(mediaUrl, "_blank");
     }
   }
@@ -479,7 +483,7 @@
 
     items.forEach((item, index) => {
       const mediaUrl = item.url || item.download_url || item.link;
-      const thumbnail = item.thumbnail;
+      const thumbUrl = item.thumbnail || item.thumb || item.picture || item.cover || mediaUrl;
       const quality = item.quality;
       const type = (item.type || "").toLowerCase();
       if (!mediaUrl) return;
@@ -490,16 +494,32 @@
       const frame = document.createElement("div");
       frame.className = "media-frame";
 
+      const isImage = type.includes("image") || mediaUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i);
+      
       let preview;
-      if (type.includes("image") || mediaUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)) {
+      if (isImage) {
         preview = document.createElement("img");
-        preview.src = mediaUrl;
+        preview.src = thumbUrl;
+        preview.referrerPolicy = "no-referrer";
+        preview.alt = "Preview Instagram Photo";
+        // Fallback jika thumbnail gagal dimuat karena CORS CDN Instagram
+        preview.onerror = () => {
+          if (preview.src !== mediaUrl) {
+            preview.src = mediaUrl;
+          } else {
+            preview.onerror = null;
+            preview.style.display = "none";
+            frame.innerHTML = `<div style="padding:15px; text-align:center; color:#7a7488; font-size:0.8rem;">🖼️ Preview Foto<br>(Siap diunduh)</div>`;
+          }
+        };
       } else {
         preview = document.createElement("video");
         preview.src = mediaUrl;
-        if (thumbnail) preview.poster = thumbnail;
+        if (thumbUrl && thumbUrl !== mediaUrl) preview.poster = thumbUrl;
         preview.controls = true;
+        preview.referrerPolicy = "no-referrer";
       }
+
       frame.appendChild(preview);
       wrapper.appendChild(frame);
 
@@ -507,14 +527,13 @@
       capRow.className = "caption-row";
       const caption = document.createElement("span");
       caption.className = "caption";
-      caption.textContent = `${quality || "SD"} · ${type || "unknown"}`;
+      caption.textContent = `${quality || "HD"} · ${isImage ? "image" : "video"}`;
       capRow.appendChild(caption);
       wrapper.appendChild(capRow);
 
-      const isImage = type.includes("image") || mediaUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i);
       const ext = isImage ? "jpg" : "mp4";
       const filename = `instagram-${Date.now()}-${index + 1}.${ext}`;
-      item._filename = filename; // simpan buat dipakai tombol "Unduh Semua"
+      item._filename = filename;
 
       const link = document.createElement("a");
       link.href = mediaUrl;
@@ -532,7 +551,6 @@
       resultEl.appendChild(wrapper);
     });
 
-    // Tombol unduh semua, muncul paling bawah setelah semua media dirender
     if (items.length > 1) {
       const allBtn = document.createElement("button");
       allBtn.type = "button";
@@ -546,7 +564,7 @@
           if (!mUrl) continue;
           allBtn.textContent = `Mengunduh ${i + 1}/${items.length}...`;
           await downloadFile(mUrl, it._filename || `instagram-${Date.now()}-${i + 1}`);
-          await new Promise((r) => setTimeout(r, 400)); // jeda kecil biar browser gak nge-block unduhan beruntun
+          await new Promise((r) => setTimeout(r, 400));
         }
         allBtn.textContent = `Unduh Semua (${items.length})`;
         allBtn.disabled = false;
