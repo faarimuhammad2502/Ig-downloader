@@ -94,9 +94,17 @@
   main {
     width: 100%;
     max-width: 560px;
+    transition: max-width 0.3s ease;
+  }
+
+  /* Melebarkan kontainer saat di layar Laptop / PC */
+  body.has-results main {
+    max-width: 1100px;
   }
 
   .search-card {
+    max-width: 560px;
+    margin: 0 auto;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 18px;
@@ -189,11 +197,12 @@
   }
 
   .alert-box {
+    max-width: 560px;
+    margin: 14px auto 0;
     background: #fff4f4;
     border: 1px solid #fecaca;
     border-radius: 14px;
     padding: 14px 16px;
-    margin-top: 14px;
     display: flex;
     align-items: flex-start;
     gap: 12px;
@@ -213,14 +222,15 @@
     color: #7f1d1d;
   }
 
-  /* Grid & Card Hasil yang Lebih Ringkas (Web Standard) */
+  /* Responsive Grid Hasil Unduhan */
   #result {
-    margin-top: 24px;
+    margin-top: 28px;
     display: none;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 280px));
-    justify-content: center;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: 20px;
+    width: 100%;
   }
+
   .media-item {
     background: var(--card);
     border: 1px solid var(--line);
@@ -239,7 +249,7 @@
     background: #efedf5;
     border-radius: 12px;
     overflow: hidden;
-    max-height: 320px;
+    height: 280px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -248,12 +258,11 @@
   .media-item img {
     width: 100%;
     height: 100%;
-    max-height: 320px;
     object-fit: cover;
   }
   .media-item video {
     width: 100%;
-    max-height: 320px;
+    height: 100%;
     object-fit: contain;
     background: #000;
   }
@@ -286,10 +295,18 @@
   }
   .media-item a:hover { opacity: 0.88; }
 
-  .download-all-btn {
+  /* Tombol Aksi di Bawah Hasil */
+  .action-buttons-wrap {
     grid-column: 1 / -1;
-    display: block;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .download-all-btn {
     padding: 14px;
     border-radius: 14px;
     border: none;
@@ -299,14 +316,31 @@
     font-weight: 700;
     font-size: 0.9rem;
     cursor: pointer;
-    margin: 8px auto 0;
-    max-width: 280px;
+    max-width: 320px;
     width: 100%;
   }
   .download-all-btn:hover { opacity: 0.9; }
-  .download-all-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  @media (max-width: 480px) {
+  .download-more-btn {
+    padding: 13px;
+    border-radius: 14px;
+    border: 1px solid #e7ddf7;
+    background: #ffffff;
+    color: var(--p1);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    max-width: 320px;
+    width: 100%;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .download-more-btn:hover {
+    background: #f3edfc;
+    border-color: var(--p1);
+  }
+
+  @media (max-width: 600px) {
     form { flex-direction: column; }
     button { width: 100%; }
     .paste-btn { width: 100%; justify-content: center; }
@@ -384,6 +418,7 @@
     statusEl.innerHTML = "";
     resultEl.style.display = "none";
     resultEl.innerHTML = "";
+    document.body.classList.remove("has-results");
   });
   toggleClearBtn();
 
@@ -413,6 +448,7 @@
     resultEl.innerHTML = "";
     statusEl.textContent = "Memproses link...";
     submitBtn.disabled = true;
+    document.body.classList.remove("has-results");
 
     try {
       const apiUrl = `${RAPIDAPI_ENDPOINT}?url=${encodeURIComponent(url)}`;
@@ -460,6 +496,7 @@
         `;
       } else {
         statusEl.textContent = `Ditemukan ${mediaItems.length} media.`;
+        document.body.classList.add("has-results");
         renderMedia(mediaItems);
       }
 
@@ -564,6 +601,11 @@
       resultEl.appendChild(wrapper);
     });
 
+    // Kontainer Tombol Aksi di Bawah Hasil Unduhan
+    const actionWrap = document.createElement("div");
+    actionWrap.className = "action-buttons-wrap";
+
+    // Tombol Unduh Semua (muncul jika media > 1)
     if (items.length > 1) {
       const allBtn = document.createElement("button");
       allBtn.type = "button";
@@ -582,8 +624,27 @@
         allBtn.textContent = `Unduh Semua (${items.length})`;
         allBtn.disabled = false;
       });
-      resultEl.appendChild(allBtn);
+      actionWrap.appendChild(allBtn);
     }
+
+    // Tombol "Unduh Foto/Video Lainnya"
+    const moreBtn = document.createElement("button");
+    moreBtn.type = "button";
+    moreBtn.className = "download-more-btn";
+    moreBtn.innerHTML = "✨ Unduh Foto / Video Lainnya";
+    moreBtn.addEventListener("click", () => {
+      urlInput.value = "";
+      toggleClearBtn();
+      statusEl.innerHTML = "";
+      resultEl.style.display = "none";
+      resultEl.innerHTML = "";
+      document.body.classList.remove("has-results");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      urlInput.focus();
+    });
+    actionWrap.appendChild(moreBtn);
+
+    resultEl.appendChild(actionWrap);
   }
 </script>
 
