@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IG Downloader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f7fb;
+    --card: #ffffff;
+    --ink: #1f1b2e;
+    --muted: #7a7488;
+    --line: #ecebf3;
+    --p1: #7b3fe4;  /* purple */
+    --p2: #d6339f;  /* pink */
+    --p3: #f5804f;  /* orange */
+    --grad: linear-gradient(135deg, var(--p1), var(--p2) 55%, var(--p3));
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 56px 16px 60px;
+  }
+
+  header {
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .logo-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: var(--grad);
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-mark svg { width: 22px; height: 22px; }
+  h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  h1 .accent {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+  .pill-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .pill {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 6px 13px;
+    border-radius: 999px;
+  }
+
+  main {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .search-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 8px;
+    box-shadow: 0 12px 30px rgba(31,27,46,0.06);
+  }
+  form {
+    display: flex;
+    gap: 8px;
+  }
+  .input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 40px 14px 16px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.92rem;
+  }
+  input[type="text"]::placeholder { color: #b3aec2; }
+  input[type="text"]:focus { outline: none; }
+  .clear-btn {
+    position: absolute;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 50%;
+    background: #efedf5;
+    color: var(--muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .clear-btn:hover { background: #e2dfec; }
+  .clear-btn.show { display: flex; }
+  .paste-btn {
+    flex-shrink: 0;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1px solid #e7ddf7;
+    background: #f3edfc;
+    color: var(--p1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+  }
+  .paste-btn:hover { background: #ebe1fa; }
+  .paste-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  button {
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    background: var(--grad);
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  button:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #status {
+    margin-top: 14px;
+    padding: 0 8px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    min-height: 16px;
+  }
+
+  #result {
+    margin-top: 24px;
+    display: none;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+  }
+  .media-item {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: 0 8px 22px rgba(31,27,46,0.05);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .media-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(31,27,46,0.1);
+  }
+  .media-frame {
+    background: #efedf5;
+    border-radius: 11px;
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .media-item img, .media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .caption-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 3px 12px;
+  }
+  .caption {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: #f3f1f9;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .media-item a {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--ink);
+    color: white;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .media-item a:hover { opacity: 0.88; }
+
+  .download-all-btn {
+    grid-column: 1 / -1;
+    display: block;
+    text-align: center;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: var(--ink);
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .download-all-btn:hover { opacity: 0.9; }
+  .download-all-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  @media (max-width: 480px) {
+    form { flex-direction: column; }
+    button { width: 100%; }
+    .paste-btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v13"/>
+        <path d="M7 12l5 5 5-5"/>
+        <path d="M5 20h14"/>
+      </svg>
+    </div>
+    <h1>IG <span class="accent">Downloader</span></h1>
+    <p class="tagline">Tempel link Instagram, unduh foto atau videonya langsung tanpa watermark.</p>
+    <div class="pill-row">
+      <span class="pill">Reels</span>
+      <span class="pill">Post</span>
+      <span class="pill">Story</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="search-card">
+      <form id="downloadForm">
+        <div class="input-wrap">
+          <input type="text" id="igUrl" placeholder="https://www.instagram.com/reel/..." required autocomplete="off">
+          <button type="button" id="clearBtn" class="clear-btn" aria-label="Hapus">✕</button>
+        </div>
+        <button type="button" id="pasteBtn" class="paste-btn" aria-label="Tempel dari clipboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="8" y="2" width="8" height="4" rx="1"/>
+            <path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/>
+          </svg>
+          Tempel
+        </button>
+        <button type="submit" id="submitBtn">Unduh</button>
+      </form>
+    </div>
+    <div id="status"></div>
+    <div id="result"></div>
+  </main>
+
+<script>
+  const RAPIDAPI_KEY  = "e4c7b565bcmsh136e87b8aa9ba7fp1f7ff1jsn80a4b11ce456";
+  const RAPIDAPI_HOST = "instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com";
+  const RAPIDAPI_ENDPOINT = "https://" + RAPIDAPI_HOST + "/convert";
+
+  const form = document.getElementById("downloadForm");
+  const statusEl = document.getElementById("status");
+  const resultEl = document.getElementById("result");
+  const submitBtn = document.getElementById("submitBtn");
+  const urlInput = document.getElementById("igUrl");
+  const clearBtn = document.getElementById("clearBtn");
+  const pasteBtn = document.getElementById("pasteBtn");
+
+  function toggleClearBtn() {
+    clearBtn.classList.toggle("show", urlInput.value.length > 0);
+  }
+  urlInput.addEventListener("input", toggleClearBtn);
+  clearBtn.addEventListener("click", () => {
+    urlInput.value = "";
+    toggleClearBtn();
+    urlInput.focus();
+    statusEl.textContent = "";
+    resultEl.style.display = "none";
+    resultEl.innerHTML = "";
+  });
+  toggleClearBtn();
+
+  pasteBtn.addEventListener("click", async () => {
+    try {
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        throw new Error("not supported");
+      }
+      const text = await navigator.clipboard.readText();
+      urlInput.value = text.trim();
+      toggleClearBtn();
+      urlInput.focus();
+      statusEl.textContent = "";
+    } catch (err) {
+      // Browser (terutama saat file dibuka via file:// atau tanpa izin clipboard)
+      // tidak mengizinkan baca clipboard otomatis. Fokuskan input supaya
+      // user tinggal tempel manual (tekan lama → Tempel di HP, atau Ctrl+V).
+      urlInput.focus();
+      urlInput.select();
+      statusEl.textContent = "Tap kolom link lalu tempel manual (tekan lama → Tempel).";
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const url = document.getElementById("igUrl").value.trim();
+    if (!url) return;
+
+    resultEl.style.display = "none";
+    resultEl.innerHTML = "";
+    statusEl.textContent = "Memproses link...";
+    submitBtn.disabled = true;
+
+    try {
+      const apiUrl = `${RAPIDAPI_ENDPOINT}?url=${encodeURIComponent(url)}`;
+
+      const res = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "X-RapidAPI-Key": RAPIDAPI_KEY,
+          "X-RapidAPI-Host": RAPIDAPI_HOST
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`Request gagal (status ${res.status})`);
+      }
+
+      const data = await res.json();
+      console.log("Response API:", data);
+
+      let mediaItems = [];
+
+      if (Array.isArray(data.media)) {
+        mediaItems = data.media;
+      } else if (Array.isArray(data.result)) {
+        mediaItems = data.result;
+      } else if (data.download_url) {
+        mediaItems = [{ url: data.download_url, type: data.type || "video" }];
+      } else if (data.url) {
+        mediaItems = [{ url: data.url, type: "video" }];
+      }
+
+      if (mediaItems.length === 0) {
+        statusEl.textContent = "Nggak nemu media. Cek struktur respons di console (F12).";
+      } else {
+        statusEl.textContent = `Ditemukan ${mediaItems.length} media.`;
+        renderMedia(mediaItems);
+      }
+
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Terjadi error: " + err.message;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  async function downloadFile(mediaUrl, filename) {
+    try {
+      const fileRes = await fetch(mediaUrl);
+      const blob = await fileRes.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const tempLink = document.createElement("a");
+      tempLink.href = blobUrl;
+      tempLink.download = filename;
+      document.body.appendChild(tempLink);
+      tempLink.click();
+      tempLink.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      // Kalau kena CORS, browser tetap coba download langsung lewat href asli
+      window.open(mediaUrl, "_blank");
+    }
+  }
+
+  function renderMedia(items) {
+    resultEl.innerHTML = "";
+    resultEl.style.display = "grid";
+
+    items.forEach((item, index) => {
+      const mediaUrl = item.url || item.download_url || item.link;
+      const thumbnail = item.thumbnail;
+      const quality = item.quality;
+      const type = (item.type || "").toLowerCase();
+      if (!mediaUrl) return;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "media-item";
+
+      const frame = document.createElement("div");
+      frame.className = "media-frame";
+
+      let preview;
+      if (type.includes("image") || mediaUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)) {
+        preview = document.createElement("img");
+        preview.src = mediaUrl;
+      } else {
+        preview = document.createElement("video");
+        preview.src = mediaUrl;
+        if (thumbnail) preview.poster = thumbnail;
+        preview.controls = true;
+      }
+      frame.appendChild(preview);
+      wrapper.appendChild(frame);
+
+      const capRow = document.createElement("div");
+      capRow.className = "caption-row";
+      const caption = document.createElement("span");
+      caption.className = "caption";
+      caption.textContent = `${quality || "SD"} · ${type || "unknown"}`;
+      capRow.appendChild(caption);
+      wrapper.appendChild(capRow);
+
+      const isImage = type.includes("image") || mediaUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i);
+      const ext = isImage ? "jpg" : "mp4";
+      const filename = `instagram-${Date.now()}-${index + 1}.${ext}`;
+      item._filename = filename; // simpan buat dipakai tombol "Unduh Semua"
+
+      const link = document.createElement("a");
+      link.href = mediaUrl;
+      link.download = filename;
+      link.rel = "noopener noreferrer";
+      link.textContent = "Unduh";
+      link.addEventListener("click", async (e) => {
+        e.preventDefault();
+        link.textContent = "Mengunduh...";
+        await downloadFile(mediaUrl, filename);
+        link.textContent = "Unduh";
+      });
+      wrapper.appendChild(link);
+
+      resultEl.appendChild(wrapper);
+    });
+
+    // Tombol unduh semua, muncul paling bawah setelah semua media dirender
+    if (items.length > 1) {
+      const allBtn = document.createElement("button");
+      allBtn.type = "button";
+      allBtn.className = "download-all-btn";
+      allBtn.textContent = `Unduh Semua (${items.length})`;
+      allBtn.addEventListener("click", async () => {
+        allBtn.disabled = true;
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i];
+          const mUrl = it.url || it.download_url || it.link;
+          if (!mUrl) continue;
+          allBtn.textContent = `Mengunduh ${i + 1}/${items.length}...`;
+          await downloadFile(mUrl, it._filename || `instagram-${Date.now()}-${i + 1}`);
+          await new Promise((r) => setTimeout(r, 400)); // jeda kecil biar browser gak nge-block unduhan beruntun
+        }
+        allBtn.textContent = `Unduh Semua (${items.length})`;
+        allBtn.disabled = false;
+      });
+      resultEl.appendChild(allBtn);
+    }
+  }
+</script>
+
+</body>
+</html>
