@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IG Downloader</title>
+<title>IG Downloader - Unduh Video, Reels, Foto & Story Instagram</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%237b3fe4'/%3E%3Cstop offset='55%25' stop-color='%23d6339f'/%3E%3Cstop offset='100%25' stop-color='%23f5804f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Cpath d='M50 26v32M36 48l14 14 14-14M30 76h40' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,8 +37,32 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 56px 16px 60px;
+    padding: 30px 16px 60px;
   }
+
+  /* Top Navigation Bar */
+  .top-bar {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+  }
+  .menu-btn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(31,27,46,0.04);
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .menu-btn:hover { background: #f3edfc; transform: translateY(-1px); }
+  .menu-btn svg { width: 22px; height: 22px; stroke: var(--ink); }
 
   header {
     max-width: 560px;
@@ -97,7 +121,6 @@
     transition: max-width 0.3s ease;
   }
 
-  /* Melebarkan kontainer saat di layar Laptop / PC */
   body.has-results main {
     max-width: 1100px;
   }
@@ -171,7 +194,7 @@
   }
   .paste-btn:hover { background: #ebe1fa; }
   .paste-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
-  button {
+  button[type="submit"] {
     padding: 14px 24px;
     border: none;
     border-radius: 12px;
@@ -184,8 +207,8 @@
     white-space: nowrap;
     transition: opacity 0.15s ease, transform 0.15s ease;
   }
-  button:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button[type="submit"]:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+  button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
 
   #status {
     margin-top: 14px;
@@ -222,7 +245,7 @@
     color: #7f1d1d;
   }
 
-  /* Responsive Grid Hasil Unduhan */
+  /* Grid Hasil Media */
   #result {
     margin-top: 28px;
     display: none;
@@ -295,7 +318,6 @@
   }
   .media-item a:hover { opacity: 0.88; }
 
-  /* Tombol Aksi di Bawah Hasil */
   .action-buttons-wrap {
     grid-column: 1 / -1;
     display: flex;
@@ -340,15 +362,269 @@
     border-color: var(--p1);
   }
 
+  /* Slide-Over Drawer Navigation Menu */
+  .drawer-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(31, 27, 46, 0.4);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 100;
+  }
+  .drawer-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+  .drawer-content {
+    position: fixed;
+    top: 0; right: -320px;
+    width: 300px;
+    height: 100%;
+    background: var(--card);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 101;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .drawer-overlay.open .drawer-content {
+    right: 0;
+  }
+  .drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+  .drawer-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  .close-drawer-btn {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .menu-group {
+    margin-bottom: 22px;
+  }
+  .menu-group-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .lang-select-wrap {
+    display: flex;
+    gap: 8px;
+    background: var(--bg);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+  .lang-opt {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .lang-opt.active {
+    background: var(--card);
+    color: var(--p1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .menu-item-info {
+    font-size: 0.85rem;
+    color: var(--ink);
+    line-height: 1.5;
+    background: var(--bg);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+
+  /* --- Seksi Edukasi & Informasi Format SnapInsta --- */
+  .info-section {
+    max-width: 900px;
+    margin: 60px auto 0;
+    text-align: left;
+  }
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .section-desc {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 40px;
+    line-height: 1.6;
+  }
+
+  /* Grid Fitur Layanan */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+    margin-bottom: 60px;
+  }
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 20px rgba(31,27,46,0.03);
+  }
+  .feature-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: #f3edfc;
+    color: var(--p1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .feature-icon svg { width: 24px; height: 24px; }
+  .feature-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+  .feature-card p {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Langkah Cara Menggunakan (Steps) */
+  .steps-wrapper {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 36px 28px;
+    margin-bottom: 60px;
+    box-shadow: 0 10px 30px rgba(31,27,46,0.03);
+  }
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    margin-top: 30px;
+  }
+  .step-item {
+    text-align: center;
+  }
+  .step-num {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--grad);
+    color: white;
+    font-weight: 800;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .step-item h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+  .step-item p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* FAQ Accordion */
+  .faq-wrapper {
+    margin-bottom: 60px;
+  }
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .faq-item {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .faq-item h4 {
+    font-size: 0.98rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .faq-item p {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  footer {
+    width: 100%;
+    max-width: 900px;
+    border-top: 1px solid var(--line);
+    padding-top: 30px;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
   @media (max-width: 600px) {
     form { flex-direction: column; }
-    button { width: 100%; }
+    button[type="submit"] { width: 100%; }
     .paste-btn { width: 100%; justify-content: center; }
     #result { grid-template-columns: 100%; }
+    .steps-wrapper { padding: 24px 16px; }
   }
 </style>
 </head>
 <body>
+
+  <!-- Top Navigation Bar -->
+  <div class="top-bar">
+    <button id="openDrawerBtn" class="menu-btn" aria-label="Menu Pengaturan">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" y1="6" x2="20" y2="6"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <line x1="4" y1="18" x2="20" y2="18"/>
+      </svg>
+    </button>
+  </div>
 
   <header>
     <div class="logo-mark">
@@ -359,7 +635,7 @@
       </svg>
     </div>
     <h1>IG <span class="accent">Downloader</span></h1>
-    <p class="tagline">Tempel link Instagram, unduh foto atau videonya langsung tanpa watermark.</p>
+    <p class="tagline" id="txtTagline">Tempel link Instagram, unduh foto atau videonya langsung tanpa watermark.</p>
     <div class="pill-row">
       <span class="pill">Reels</span>
       <span class="pill">Post</span>
@@ -379,7 +655,7 @@
             <rect x="8" y="2" width="8" height="4" rx="1"/>
             <path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/>
           </svg>
-          Tempel
+          <span id="txtPaste">Tempel</span>
         </button>
         <button type="submit" id="submitBtn">Unduh</button>
       </form>
@@ -387,7 +663,126 @@
 
     <div id="status"></div>
     <div id="result"></div>
+
+    <!-- Seksi Penjelasan Format SnapInsta -->
+    <section class="info-section">
+      
+      <!-- Seksi Fitur Utama -->
+      <h2 class="section-title" id="txtFeatTitle">Layanan Unduh Instagram Serbaguna</h2>
+      <p class="section-desc" id="txtFeatSub">Platform terbaik untuk menyimpan berbagai jenis konten dari Instagram dalam kualitas resolusi tinggi tanpa batas.</p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </div>
+          <h3 id="txtFeat1Head">Pengunduh Foto Instagram</h3>
+          <p id="txtFeat1Desc">Unduh foto asli dari postingan tunggal maupun carousel dalam resolusi tinggi HD tanpa kompresi.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </div>
+          <h3 id="txtFeat2Head">Pengunduh Video & Reels</h3>
+          <p id="txtFeat2Desc">Simpan video Reels pendek dan konten video feed menarik dengan suara yang jernih dan kualitas terbaik.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          </div>
+          <h3 id="txtFeat3Head">Pengunduh Story & Carousel</h3>
+          <p id="txtFeat3Desc">Dapatkan kemudahan mengunduh seluruh media carousel (banyak foto/video sekaligus) hanya dalam satu klik.</p>
+        </div>
+      </div>
+
+      <!-- Panduan Cara Menggunakan -->
+      <div class="steps-wrapper">
+        <h2 class="section-title" style="margin-bottom: 6px;" id="txtStepTitle">Cara Mengunduh Media Instagram</h2>
+        <p class="section-desc" style="margin-bottom: 0;" id="txtStepSub">Ikuti 3 langkah mudah berikut untuk menyimpan foto atau video ke perangkat kamu:</p>
+        
+        <div class="steps-grid">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <h4 id="txtStep1Head">Salin Link (URL)</h4>
+            <p id="txtStep1Desc">Buka aplikasi Instagram, pilih foto, Reels, atau Story, lalu salin tautannya (Copy Link).</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <h4 id="txtStep2Head">Tempelkan Link</h4>
+            <p id="txtStep2Desc">Kembali ke website ini, klik tombol <strong>Tempel</strong> pada kolom pencarian di atas.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <h4 id="txtStep3Head">Unduh File</h4>
+            <p id="txtStep3Desc">Klik tombol <strong>Unduh</strong> dan pilih file yang ingin disimpan ke galeri kamu.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seksi FAQ -->
+      <div class="faq-wrapper">
+        <h2 class="section-title" id="txtFaqMainTitle">Pertanyaan yang Sering Diajukan (FAQ)</h2>
+        <div class="faq-list">
+          <div class="faq-item">
+            <h4 id="txtFaq1Q">Apakah saya harus login ke akun Instagram?</h4>
+            <p id="txtFaq1A">Tidak. Kamu tidak perlu memasukkan username atau password Instagram kamu. Layanan ini dapat digunakan secara bebas tanpa login.</p>
+          </div>
+          <div class="faq-item">
+            <h4 id="txtFaq2Q">Apakah pengunduhan ini gratis dan ada batasan?</h4>
+            <p id="txtFaq2A">Layanan ini 100% gratis dan kamu bisa mengunduh foto maupun video Instagram sebanyak yang kamu mau tanpa batasan.</p>
+          </div>
+          <div class="faq-item">
+            <h4 id="txtFaq3Q">Mengapa media dari akun tertentu tidak bisa diunduh?</h4>
+            <p id="txtFaq3A">Layanan ini hanya mendukung akun Instagram publik. Postingan atau Story yang diunggah oleh <strong>akun private</strong> tidak dapat diunduh demi menjaga kebijakan privasi.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <footer>
+      <p>© 2026 IG Downloader Web. Semua hak cipta dilindungi.</p>
+    </footer>
+
   </main>
+
+  <!-- Slide Drawer Menu -->
+  <div id="drawerOverlay" class="drawer-overlay">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h2 id="txtMenuTitle">Pengaturan</h2>
+        <button id="closeDrawerBtn" class="close-drawer-btn">✕</button>
+      </div>
+
+      <!-- Pengaturan Bahasa -->
+      <div class="menu-group">
+        <div class="menu-group-title" id="txtLangTitle">Bahasa / Language</div>
+        <div class="lang-select-wrap">
+          <button class="lang-opt active" data-lang="id">Bahasa (ID)</button>
+          <button class="lang-opt" data-lang="en">English (EN)</button>
+        </div>
+      </div>
+
+      <!-- Informasi Akun Private -->
+      <div class="menu-group">
+        <div class="menu-group-title" id="txtFaqTitle">Bantuan & Catatan</div>
+        <div class="menu-item-info" id="txtFaqDesc">
+          <strong>🔒 Akun Private:</strong><br>Posting, Reel, atau Story dari akun Instagram private tidak dapat diunduh demi privasi pengguna. Pastikan link berasal dari akun publik.
+        </div>
+      </div>
+
+      <!-- Tentang App -->
+      <div class="menu-group" style="margin-top: auto;">
+        <div class="menu-group-title" id="txtAboutTitle">Tentang</div>
+        <div class="menu-item-info" style="font-size: 0.78rem; color: var(--muted);">
+          IG Downloader Web v2.2<br>
+          Unduh Reels, Post & Story HD tanpa watermark.
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
   const RAPIDAPI_KEY  = "e4c7b565bcmsh136e87b8aa9ba7fp1f7ff1jsn80a4b11ce456";
@@ -401,6 +796,156 @@
   const urlInput = document.getElementById("igUrl");
   const clearBtn = document.getElementById("clearBtn");
   const pasteBtn = document.getElementById("pasteBtn");
+
+  // Multi-Language Support System
+  let currentLang = "id";
+  const translations = {
+    id: {
+      tagline: "Tempel link Instagram, unduh foto atau videonya langsung tanpa watermark.",
+      paste: "Tempel",
+      download: "Unduh",
+      downloadMedia: "Unduh Media",
+      downloadAll: "Unduh Semua",
+      downloadMore: "✨ Unduh Foto / Video Lainnya",
+      processing: "Memproses link...",
+      foundMedia: "Ditemukan {count} media.",
+      privateErrTitle: "Gagal Mengunduh Media!",
+      privateErrDesc: "Media tidak dapat diakses. Ini terjadi jika postingan, Reels, atau Story berasal dari <strong>akun private</strong>, atau link tidak valid.",
+      errorTitle: "Terjadi Kesalahan!",
+      menuTitle: "Pengaturan",
+      langTitle: "Bahasa / Language",
+      faqTitle: "Bantuan & Catatan",
+      faqDesc: "<strong>🔒 Akun Private:</strong><br>Posting, Reel, atau Story dari akun Instagram private tidak dapat diunduh demi privasi pengguna. Pastikan link berasal dari akun publik.",
+      aboutTitle: "Tentang",
+
+      // Teks Seksi Edukasi SnapInsta Format
+      featTitle: "Layanan Unduh Instagram Serbaguna",
+      featSub: "Platform terbaik untuk menyimpan berbagai jenis konten dari Instagram dalam kualitas resolusi tinggi tanpa batas.",
+      feat1Head: "Pengunduh Foto Instagram",
+      feat1Desc: "Unduh foto asli dari postingan tunggal maupun carousel dalam resolusi tinggi HD tanpa kompresi.",
+      feat2Head: "Pengunduh Video & Reels",
+      feat2Desc: "Simpan video Reels pendek dan konten video feed menarik dengan suara yang jernih dan kualitas terbaik.",
+      feat3Head: "Pengunduh Story & Carousel",
+      feat3Desc: "Dapatkan kemudahan mengunduh seluruh media carousel (banyak foto/video sekaligus) hanya dalam satu klik.",
+      stepTitle: "Cara Mengunduh Media Instagram",
+      stepSub: "Ikuti 3 langkah mudah berikut untuk menyimpan foto atau video ke perangkat kamu:",
+      step1Head: "Salin Link (URL)",
+      step1Desc: "Buka aplikasi Instagram, pilih foto, Reels, atau Story, lalu salin tautannya (Copy Link).",
+      step2Head: "Tempelkan Link",
+      step2Desc: "Kembali ke website ini, klik tombol Tempel pada kolom pencarian di atas.",
+      step3Head: "Unduh File",
+      step3Desc: "Klik tombol Unduh dan pilih file yang ingin disimpan ke galeri kamu.",
+      faqMainTitle: "Pertanyaan yang Sering Diajukan (FAQ)",
+      faq1Q: "Apakah saya harus login ke akun Instagram?",
+      faq1A: "Tidak. Kamu tidak perlu memasukkan username atau password Instagram kamu. Layanan ini dapat digunakan secara bebas tanpa login.",
+      faq2Q: "Apakah pengunduhan ini gratis dan ada batasan?",
+      faq2A: "Layanan ini 100% gratis dan kamu bisa mengunduh foto maupun video Instagram sebanyak yang kamu mau tanpa batasan.",
+      faq3Q: "Mengapa media dari akun tertentu tidak bisa diunduh?",
+      faq3A: "Layanan ini hanya mendukung akun Instagram publik. Postingan atau Story yang diunggah oleh akun private tidak dapat diunduh demi menjaga kebijakan privasi."
+    },
+    en: {
+      tagline: "Paste Instagram link, download photos or videos directly without watermark.",
+      paste: "Paste",
+      download: "Download",
+      downloadMedia: "Download Media",
+      downloadAll: "Download All",
+      downloadMore: "✨ Download Other Photos / Videos",
+      processing: "Processing link...",
+      foundMedia: "Found {count} media item(s).",
+      privateErrTitle: "Failed to Download Media!",
+      privateErrDesc: "Media cannot be accessed. This usually occurs if the post, Reel, or Story comes from a <strong>private account</strong> or invalid link.",
+      errorTitle: "An Error Occurred!",
+      menuTitle: "Settings",
+      langTitle: "Language",
+      faqTitle: "Help & Notes",
+      faqDesc: "<strong>🔒 Private Account:</strong><br>Posts, Reels, or Stories from private Instagram accounts cannot be downloaded. Ensure link is from a public account.",
+      aboutTitle: "About",
+
+      // SnapInsta Format English Texts
+      featTitle: "All-in-One Instagram Downloader",
+      featSub: "The best platform to save all types of Instagram content in high resolution without limits.",
+      feat1Head: "Instagram Photo Downloader",
+      feat1Desc: "Download original photos from single posts or carousels in high-definition HD quality.",
+      feat2Head: "Video & Reels Downloader",
+      feat2Desc: "Save short Reels videos and feed content with clear audio and top video quality.",
+      feat3Head: "Story & Carousel Downloader",
+      feat3Desc: "Easily download full carousel posts (multiple photos/videos) with just one click.",
+      stepTitle: "How to Download Instagram Media",
+      stepSub: "Follow these 3 simple steps to save photos or videos to your device:",
+      step1Head: "Copy Link (URL)",
+      step1Desc: "Open Instagram app, select photo, Reel, or Story, and copy its link.",
+      step2Head: "Paste Link",
+      step2Desc: "Return to this site and click the Paste button in the search box above.",
+      step3Head: "Download File",
+      step3Desc: "Click the Download button and save the file directly to your gallery.",
+      faqMainTitle: "Frequently Asked Questions (FAQ)",
+      faq1Q: "Do I need to log in with my Instagram account?",
+      faq1A: "No. You don't need to enter your Instagram credentials. This service is free to use without login.",
+      faq2Q: "Is this service free and are there any limits?",
+      faq2A: "This service is 100% free with unlimited downloads for both photos and videos.",
+      faq3Q: "Why can't I download media from certain accounts?",
+      faq3A: "Our tool only supports public Instagram accounts. Posts or Stories from private accounts cannot be downloaded due to privacy policies."
+    }
+  };
+
+  function updateLanguage(lang) {
+    currentLang = lang;
+    const t = translations[lang];
+    document.getElementById("txtTagline").textContent = t.tagline;
+    document.getElementById("txtPaste").textContent = t.paste;
+    document.getElementById("submitBtn").textContent = t.download;
+    document.getElementById("txtMenuTitle").textContent = t.menuTitle;
+    document.getElementById("txtLangTitle").textContent = t.langTitle;
+    document.getElementById("txtFaqTitle").textContent = t.faqTitle;
+    document.getElementById("txtFaqDesc").innerHTML = t.faqDesc;
+    document.getElementById("txtAboutTitle").textContent = t.aboutTitle;
+
+    // Edukasi & FAQ Translation
+    document.getElementById("txtFeatTitle").textContent = t.featTitle;
+    document.getElementById("txtFeatSub").textContent = t.featSub;
+    document.getElementById("txtFeat1Head").textContent = t.feat1Head;
+    document.getElementById("txtFeat1Desc").textContent = t.feat1Desc;
+    document.getElementById("txtFeat2Head").textContent = t.feat2Head;
+    document.getElementById("txtFeat2Desc").textContent = t.feat2Desc;
+    document.getElementById("txtFeat3Head").textContent = t.feat3Head;
+    document.getElementById("txtFeat3Desc").textContent = t.feat3Desc;
+
+    document.getElementById("txtStepTitle").textContent = t.stepTitle;
+    document.getElementById("txtStepSub").textContent = t.stepSub;
+    document.getElementById("txtStep1Head").textContent = t.step1Head;
+    document.getElementById("txtStep1Desc").textContent = t.step1Desc;
+    document.getElementById("txtStep2Head").textContent = t.step2Head;
+    document.getElementById("txtStep2Desc").textContent = t.step2Desc;
+    document.getElementById("txtStep3Head").textContent = t.step3Head;
+    document.getElementById("txtStep3Desc").textContent = t.step3Desc;
+
+    document.getElementById("txtFaqMainTitle").textContent = t.faqMainTitle;
+    document.getElementById("txtFaq1Q").textContent = t.faq1Q;
+    document.getElementById("txtFaq1A").textContent = t.faq1A;
+    document.getElementById("txtFaq2Q").textContent = t.faq2Q;
+    document.getElementById("txtFaq2A").textContent = t.faq2A;
+    document.getElementById("txtFaq3Q").textContent = t.faq3Q;
+    document.getElementById("txtFaq3A").textContent = t.faq3A;
+
+    document.querySelectorAll(".lang-opt").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.lang === lang);
+    });
+  }
+
+  // Drawer Handler
+  const openDrawerBtn = document.getElementById("openDrawerBtn");
+  const closeDrawerBtn = document.getElementById("closeDrawerBtn");
+  const drawerOverlay = document.getElementById("drawerOverlay");
+
+  openDrawerBtn.addEventListener("click", () => drawerOverlay.classList.add("open"));
+  closeDrawerBtn.addEventListener("click", () => drawerOverlay.classList.remove("open"));
+  drawerOverlay.addEventListener("click", (e) => {
+    if (e.target === drawerOverlay) drawerOverlay.classList.remove("open");
+  });
+
+  document.querySelectorAll(".lang-opt").forEach(btn => {
+    btn.addEventListener("click", () => updateLanguage(btn.dataset.lang));
+  });
 
   function getProxiedImageUrl(rawUrl) {
     if (!rawUrl) return "";
@@ -444,9 +989,10 @@
     const url = document.getElementById("igUrl").value.trim();
     if (!url) return;
 
+    const t = translations[currentLang];
     resultEl.style.display = "none";
     resultEl.innerHTML = "";
-    statusEl.textContent = "Memproses link...";
+    statusEl.textContent = t.processing;
     submitBtn.disabled = true;
     document.body.classList.remove("has-results");
 
@@ -489,13 +1035,13 @@
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
             <div>
-              <strong>Gagal Mengunduh Media!</strong><br>
-              Media tidak dapat diakses. Ini terjadi jika postingan, Reels, atau Story berasal dari <strong>akun private</strong>, atau link tidak valid. Pastikan link berasal dari akun publik.
+              <strong>${t.privateErrTitle}</strong><br>
+              ${t.privateErrDesc}
             </div>
           </div>
         `;
       } else {
-        statusEl.textContent = `Ditemukan ${mediaItems.length} media.`;
+        statusEl.textContent = t.foundMedia.replace("{count}", mediaItems.length);
         document.body.classList.add("has-results");
         renderMedia(mediaItems);
       }
@@ -510,8 +1056,8 @@
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <div>
-            <strong>Terjadi Kesalahan!</strong><br>
-            Tidak dapat memproses link (${err.message}). Pastikan link yang ditempel sudah benar.
+            <strong>${t.errorTitle}</strong><br>
+            Tidak dapat memproses link (${err.message}).
           </div>
         </div>
       `;
@@ -540,6 +1086,7 @@
   function renderMedia(items) {
     resultEl.innerHTML = "";
     resultEl.style.display = "grid";
+    const t = translations[currentLang];
 
     items.forEach((item, index) => {
       const mediaUrl = item.url || item.download_url || item.link;
@@ -589,49 +1136,47 @@
       link.href = mediaUrl;
       link.download = filename;
       link.rel = "noopener noreferrer";
-      link.textContent = "Unduh Media";
+      link.textContent = t.downloadMedia;
       link.addEventListener("click", async (e) => {
         e.preventDefault();
-        link.textContent = "Mengunduh...";
+        link.textContent = "...";
         await downloadFile(mediaUrl, filename);
-        link.textContent = "Unduh Media";
+        link.textContent = t.downloadMedia;
       });
       wrapper.appendChild(link);
 
       resultEl.appendChild(wrapper);
     });
 
-    // Kontainer Tombol Aksi di Bawah Hasil Unduhan
+    // Kontainer Tombol Aksi
     const actionWrap = document.createElement("div");
     actionWrap.className = "action-buttons-wrap";
 
-    // Tombol Unduh Semua (muncul jika media > 1)
     if (items.length > 1) {
       const allBtn = document.createElement("button");
       allBtn.type = "button";
       allBtn.className = "download-all-btn";
-      allBtn.textContent = `Unduh Semua (${items.length})`;
+      allBtn.textContent = `${t.downloadAll} (${items.length})`;
       allBtn.addEventListener("click", async () => {
         allBtn.disabled = true;
         for (let i = 0; i < items.length; i++) {
           const it = items[i];
           const mUrl = it.url || it.download_url || it.link;
           if (!mUrl) continue;
-          allBtn.textContent = `Mengunduh ${i + 1}/${items.length}...`;
+          allBtn.textContent = `(${i + 1}/${items.length})...`;
           await downloadFile(mUrl, it._filename || `instagram-${Date.now()}-${i + 1}`);
           await new Promise((r) => setTimeout(r, 400));
         }
-        allBtn.textContent = `Unduh Semua (${items.length})`;
+        allBtn.textContent = `${t.downloadAll} (${items.length})`;
         allBtn.disabled = false;
       });
       actionWrap.appendChild(allBtn);
     }
 
-    // Tombol "Unduh Foto/Video Lainnya"
     const moreBtn = document.createElement("button");
     moreBtn.type = "button";
     moreBtn.className = "download-more-btn";
-    moreBtn.innerHTML = "✨ Unduh Foto / Video Lainnya";
+    moreBtn.innerHTML = t.downloadMore;
     moreBtn.addEventListener("click", () => {
       urlInput.value = "";
       toggleClearBtn();
